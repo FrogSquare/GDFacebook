@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+	<string name="dialog_yes">Yes</string>
+	<string name="dialog_no">No</string>
+
+	<string name="publish_scores_dialog_title">Save Score</string>
+	<string name="publish_scores_dialog_message">Do you want to save your score to Facebook?</string>
+</resources>
