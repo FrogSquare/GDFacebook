@@ -87,6 +87,30 @@ public class Facebook extends Godot.SingletonBase {
 		});
 	}
 
+	public boolean isConnected() {
+		return FacebookSDK.getInstance(activity).isConnected();
+	}
+
+	public void submitScore(final int score) {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).submitScore(score);
+			}
+		});
+	}
+
+	public String getFriends() {
+		return FacebookSDK.getInstance(activity).getFriends().toString();
+	}
+
+	public void loadPendingRequest() {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).loadRequests();
+			}
+		});
+	}
+
 	protected void onMainActivityResult (int requestCode, int resultCode, Intent data) {
 		FacebookSDK.getInstance(activity).onActivityResult(requestCode, resultCode, data);
 	}
