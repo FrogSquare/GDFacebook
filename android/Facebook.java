@@ -44,8 +44,9 @@ public class Facebook extends Godot.SingletonBase {
 	public Facebook(Activity p_activity) {
 		registerClass ("Facebook", new String[] {
 			"init", "login", "logout", "isConnected", "isDetsLoaded", "submitScore",
-			"getFriends", "loadScoreBoard", "sendInvitation", "sendChallenge",
-			"deleteFBRequest", "loadPendingRequest", "sendGift", "requestGift"
+			"getFriends", "loadScoreBoard", "sendInvitation", "sendRequest",
+			"sendDirectRequest", "deleteFBRequest", "loadPendingRequest",
+			"sendGift", "requestGift"
 		});
 
 		activity = p_activity;
@@ -91,7 +92,13 @@ public class Facebook extends Godot.SingletonBase {
 		return FacebookSDK.getInstance(activity).isConnected();
 	}
 
+	public boolean isDetsLoaded() {
+		return FacebookSDK.getInstance(activity).isDetsLoaded();
+	}
+
 	public void submitScore(final int score) {
+		if (!isConnected()) { return; }
+
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				FacebookSDK.getInstance(activity).submitScore(score);
@@ -100,13 +107,72 @@ public class Facebook extends Godot.SingletonBase {
 	}
 
 	public String getFriends() {
+		if (!isConnected()) { return "NULL"; }
+
 		return FacebookSDK.getInstance(activity).getFriends().toString();
 	}
 
+	public void sendInvitation (final String message) {
+		if (!isConnected()) { return; }
+
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity) .showDialogForInvites(
+				activity.getString(R.string.godot_project_name_string), message);
+			}
+		});
+	}
+
+	public void sendRequest (final String message) {
+		if (!isConnected()) { return; }
+
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).showDialogForRequests(
+				activity.getString(R.string.godot_project_name_string),
+				message);
+			}
+		});
+	}
+
+	public void sendChallenge (final String message, final String[] recip) {
+		if (!isConnected()) { return; }
+
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).showDirectRequests(
+				activity.getString(R.string.godot_project_name_string),
+				message, Arrays.asList(recip));
+			}
+		});
+	}
+
+	public void loadScoreBoard () {
+		if (!isConnected()) { return; }
+
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).loadTopScore();
+			}
+		});
+	}
+
 	public void loadPendingRequest() {
+		if (!isConnected()) { return; }
+
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				FacebookSDK.getInstance(activity).loadRequests();
+			}
+		});
+	}
+
+	public void deleteFBRequest (final String req_id) {
+		if (!isConnected()) { return; }
+
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				FacebookSDK.getInstance(activity).deleteRequest(req_id);
 			}
 		});
 	}

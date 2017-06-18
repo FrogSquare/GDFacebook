@@ -412,17 +412,7 @@ public class FacebookSDK {
 		requestDialog.show(content);
 	}
 
-	public void showDialogForDirectRequests (String title, String message, List<String> recip) {
-		GameRequestContent content = new GameRequestContent.Builder()
-		.setTitle(title)
-		.setMessage(message)
-		.setRecipients(recip)
-		.build();
-
-		requestDialog.show(content);
-	}
-
-	public void showDialogForChallenge (String title, String message, List<String> recip) {
+	public void showDirectRequests (String title, String message, List<String> recip) {
 		GameRequestContent content = new GameRequestContent.Builder()
 		.setTitle(title)
 		.setMessage(message)
