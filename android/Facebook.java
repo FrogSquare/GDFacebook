@@ -135,7 +135,7 @@ public class Facebook extends Godot.SingletonBase {
 		});
 	}
 
-	public void sendChallenge (final String message, final String[] recip) {
+	public void sendDirectRequest (final String message, final String[] recip) {
 		if (!isConnected()) { return; }
 
 		activity.runOnUiThread(new Runnable() {
