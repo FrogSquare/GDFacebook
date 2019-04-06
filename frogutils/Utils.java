@@ -18,6 +18,9 @@ package org.godotengine.godot;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
@@ -31,6 +34,7 @@ import org.json.JSONException;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.BufferedReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -38,7 +42,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 
+import org.godotengine.godot.Utils;
+
 public class Utils {
+
+    public static final String TAG = "FrogSquare";
 
 	public static final int FIREBASE_INVITE_REQUEST		= 8002;
 	public static final int FIREBASE_NOTIFICATION_REQUEST	= 8003;
@@ -47,27 +55,76 @@ public class Utils {
 	public static final int FIREBASE_TWITTER_SIGN_IN	= 8006;
 	// public static final int FIREBASE_ = ;
 
-	public static void d(final String message) {
-		if (Config.DEBUG) {
-			Log.d(Config.TAG, message);
+    public static void initDebug(final String from) {
+        if (DebugCfg == null) {
+            DebugCfg = new HashMap< String, Boolean>();
+        }
+
+        set_debug(from, true);
+    }
+
+    public static void set_debug(final String from, final boolean value) {
+        if (DebugCfg == null) {
+            initDebug(from);
+        }
+
+        DebugCfg.put(from, value);
+    }
+
+    public static boolean get_debug(final String from) {
+        if (DebugCfg == null) {
+            initDebug(from);
+        }
+
+        if (DebugCfg.containsKey(from)) {
+            return DebugCfg.get(from);
+        } else {
+            set_debug(from, true);
+            return DebugCfg.get(from);
+        }
+    }
+
+    /** GodotSQL **/
+    public static boolean get_db_bool(final String p_key) {
+        String val = get_db_value(p_key);
+
+        if (val.equals("0") || val.equals("false")) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public static String get_db_value(final String p_key) {
+        return KeyValueStorage.getValue(p_key);
+    }
+
+    public static void set_db_value(final String p_key, final String p_value) {
+        KeyValueStorage.setValue(p_key, p_value);
+    }
+    /** GodotSQL **/
+
+	public static void d(final String from, final String message) {
+		if (get_debug(from)) {
+			Log.d(TAG, message);
 		}
 	}
 
-	public static void e(final String message) {
-		if (Config.DEBUG) {
-			Log.e(Config.TAG, message);
+	public static void e(final String from, final String message) {
+		if (get_debug(from)) {
+			Log.e(TAG, message);
 		}
 	}
 
-	public static void i(final String message) {
-		if (Config.DEBUG) {
-			Log.i(Config.TAG, message);
+	public static void i(final String from, final String message) {
+		if (get_debug(from)) {
+			Log.i(TAG, message);
 		}
 	}
 
-	public static void w(final String message) {
-		if (Config.DEBUG) {
-			Log.w(Config.TAG, message);
+	public static void w(final String from, final String message) {
+		if (get_debug(from)) {
+			Log.w(TAG, message);
 		}
 	}
 
@@ -75,7 +132,7 @@ public class Utils {
 		JSONObject jobject = null;
 
 		try { jobject = new JSONObject(jsonData); }
-		catch (JSONException e) { Utils.d("JSONObject exception: " + e.toString()); }
+		catch (JSONException e) { Utils.d(TAG, "JSONObject exception: " + e.toString()); }
 
 		Map<String, Object> retMap = new HashMap<String, Object>();
 		Iterator<String> keysItr = jobject.keys();
@@ -87,14 +144,33 @@ public class Utils {
 
 				retMap.put(key, value);
 			} catch (JSONException e) {
-				Utils.d("JSONObject get key error" + e.toString());
+				Utils.d(TAG, "JSONObject get key error" + e.toString());
 			}
 		}
 
 		return retMap;
 	}
 
+	public static Bitmap getBitmapFromAsset(Context context, String filePath) {
+		if (filePath.startsWith("res://")) { filePath = filePath.replaceFirst("res://", ""); }
+
+		AssetManager assetManager = context.getAssets();
+
+		InputStream istr;
+		Bitmap bitmap = null;
+
+		try {
+			istr = assetManager.open(filePath);
+			bitmap = BitmapFactory.decodeStream(istr);
+		} catch (IOException e) {
+			// handle exception
+		}
+
+		return bitmap;
+	}
+
 	public static String readFromFile(String fPath, Context context) {
+        Utils.d(TAG, "Reading File: " + fPath);
 		StringBuilder returnString = new StringBuilder();
 
 		String fileName = fPath;
@@ -118,7 +194,9 @@ public class Utils {
 			}
 
 		}
-		catch (Exception e) { e.getMessage(); }
+		catch (Exception e) {
+            Utils.d(TAG, "FileRead Failed: " + e.getMessage());
+        }
 		finally {
 			try {
 				if (isr != null) { isr.close(); }
@@ -168,7 +246,7 @@ public class Utils {
 			}
 
 			return hexString.toString();
-		} catch (NoSuchAlgorithmException e) { w("FB:MD5:Algorithm:" + e.toString()); }
+		} catch (NoSuchAlgorithmException e) { Utils.w(TAG, "FB:MD5:Algorithm:" + e.toString()); }
 
 		return "";
 	}
@@ -207,24 +285,72 @@ public class Utils {
 		script_instanceID = instanceID;
 	}
 
-	public static void callScriptFunc(int script_id, String key, String value) {
-		GodotLib.calldeferred(script_id, "_receive_message",
-		new Object[] { Config.TAG, key, value });
+	public static void callScriptCallback(
+            int script_id, String function, String from, Object key, Object value) {
+
+		GodotLib.calldeferred(script_id, function, new Object[] { TAG, from, key, value });
 	}
 
-	public static void callScriptFunc(String key, String value) {
+	public static void callScriptCallback(String function, String from, Object key, Object value) {
 		if (script_instanceID == -1) {
-			// Utils.d("Script instance not set");
+			Utils.d(TAG, "Script::Instance::NotSset");
+			return;
+		}
+
+		GodotLib.calldeferred(script_instanceID, function,
+		new Object[] { TAG, from, key, value });
+	}
+
+	public static void callScriptFunc(int script_id, String from, Object key, Object value) {
+		GodotLib.calldeferred(script_id, "_receive_message",
+		new Object[] { TAG, from, key, value });
+	}
+
+	public static void callScriptFunc(String from, Object key, Object value) {
+		if (script_instanceID == -1) {
+			Utils.d(TAG, "Script::Instance::NotSset");
 			return;
 		}
 
 		GodotLib.calldeferred(script_instanceID, "_receive_message",
-		new Object[] { Config.TAG, key, value });
+		new Object[] { TAG, from, key, value });
 	}
 
 	public static boolean checkGooglePlayService(Activity activity) {
 		return true;
 	}
 
+	public static void putAllInDict(Bundle bundle, Dictionary keyValues) {
+		String[] keys = keyValues.get_keys();
+		for(int i=0; i < keys.length; i++) {
+			String key = keys[i];
+			Utils.putGodotValue(bundle, key, keyValues.get(key));
+		}
+	}
+
+	public static void putGodotValue(Bundle bundle, String key, Object value) {
+
+		if (value instanceof Boolean) {
+			bundle.putBoolean(key, (Boolean) value);
+
+		} else if (value instanceof Integer) {
+			bundle.putInt(key, (Integer) value);
+
+		} else if (value instanceof Double) {
+			bundle.putDouble(key, (Double) value);
+
+		} else if (value instanceof String) {
+			bundle.putString(key, (String) value);
+
+		} else {
+
+			if (value != null) {
+				bundle.putString(key, value.toString());
+			}
+
+		}
+	}
+
+    private static Map< String, Boolean> DebugCfg = null;
 	public static int script_instanceID = -1;
 }

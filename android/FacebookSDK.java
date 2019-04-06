@@ -84,8 +84,8 @@ public class FacebookSDK {
 		initCallbacks();
 
 		AppEventsLogger.activateApp(activity);
-		Utils.callScriptFunc("initialized", "true");
-		Utils.d("Facebook:Initialized");
+		Utils.callScriptFunc("Facebook", "initialized", "true");
+		Utils.d("GodotFacebook", "Facebook:Initialized");
 
 		onStart();
 	}
@@ -98,17 +98,17 @@ public class FacebookSDK {
 		new FacebookCallback<GameRequestDialog.Result>() {
 			@Override
 			public void onSuccess(GameRequestDialog.Result result) {
-				Utils.d("Facebook:Request:Send:success");
+				Utils.d("GodotFacebook", "Facebook:Request:Send:success");
 			}
 
 			@Override
 			public void onCancel() {
-				Utils.d("Facebook request has been canceled");
+				Utils.d("GodotFacebook", "Facebook request has been canceled");
 			}
 
 			@Override
 			public void onError(FacebookException error) {
-				Utils.d("Facebook request error: " + error.toString());
+				Utils.d("GodotFacebook", "Facebook request error: " + error.toString());
 			}
 		});
 
@@ -117,7 +117,7 @@ public class FacebookSDK {
 			@Override
 			public void onSuccess(LoginResult result) {
 				Log.d("godot", "Facebook login success");
-				Utils.d("" + result.toString());
+				Utils.d("GodotFacebook", "" + result.toString());
 
 				accessToken = result.getAccessToken();
 				successLogin();
@@ -126,13 +126,13 @@ public class FacebookSDK {
 			@Override
 			public void onCancel() {
 				Log.d("godot", "Facebook login cancel");
-				Utils.callScriptFunc("login", "cancel");
+				Utils.callScriptFunc("Facebook", "login", "cancel");
 			}
 
 			@Override
 			public void onError(FacebookException exception) {
 				Log.d("godot", "Facebook login error");
-				Utils.callScriptFunc("login", "error");
+				Utils.callScriptFunc("Facebook", "login", "error");
 			}
 		});
 
@@ -197,7 +197,7 @@ public class FacebookSDK {
 	public void disconnect() {
 		if (callbackManager == null) { return; }
 
-		Utils.d("Facebook logout");
+		Utils.d("GodotFacebook", "Facebook logout");
 		LoginManager.getInstance().logOut();
 	}
 
@@ -205,14 +205,14 @@ public class FacebookSDK {
 		loggedIn = false;
 		dets_loaded = false;
 
-		Utils.d("Facebook logged out");
+		Utils.d("GodotFacebook", "Facebook logged out");
 
 		friends = null;
 		currentFBUser = null;
 
 		myTopScore = -1;
 
-		Utils.callScriptFunc("login", "false");
+		Utils.callScriptFunc("Facebook", "login", "false");
 	}
 
 	private void successLogin() {
@@ -221,9 +221,9 @@ public class FacebookSDK {
 		accessToken = AccessToken.getCurrentAccessToken();
 		profile = Profile.getCurrentProfile();
 
-		if (profile != null) { Utils.d("Name: " + profile.getName()); }
+		if (profile != null) { Utils.d("GodotFacebook", "Name: " + profile.getName()); }
 
-		Utils.callScriptFunc("login", "true");
+		Utils.callScriptFunc("Facebook", "login", "true");
 		fetchUserInformationAndLogin();
 	}
 
@@ -269,8 +269,8 @@ public class FacebookSDK {
 					JSONObject graphObject = response.getJSONObject();
 					JSONArray data = graphObject.optJSONArray("data");
 					setFriends(data);
-					Utils.d("Friends List: " + data.toString());
-				} else { Utils.d("Response Error: " + error.toString()); }
+					Utils.d("GodotFacebook", "Friends List: " + data.toString());
+				} else { Utils.d("GodotFacebook", "Response Error: " + error.toString()); }
 			}
 		});
 
@@ -287,7 +287,7 @@ public class FacebookSDK {
 				if (error == null) {
 					JSONObject user = response.getJSONObject();
 					setCurrentFBUser(user);
-				} else { Utils.d("Response Error: " + error.toString()); }
+				} else { Utils.d("GodotFacebook", "Response Error: " + error.toString()); }
 			}
 		});
 
@@ -308,10 +308,10 @@ public class FacebookSDK {
 						KeyValueStorage.setValue(
 						"bestScore_m", Integer.toString(score));
 
-						Utils.d("My:Top:Score:" + score);
+						Utils.d("GodotFacebook", "My:Top:Score:" + score);
 					}
 
-				} else { Utils.d("Response:Error:" + error.toString()); }
+				} else { Utils.d("GodotFacebook", "Response:Error:" + error.toString()); }
 			}
 		});
 
@@ -345,7 +345,7 @@ public class FacebookSDK {
 
 	public void submitScore(final int score) {
 		if (!loggedIn) {
-			Utils.d("Facebook:NotConnected");
+			Utils.d("GodotFacebook", "Facebook:NotConnected");
 			return;
 		}
 
@@ -357,18 +357,18 @@ public class FacebookSDK {
 		JSONObject object = new JSONObject();
 
 		try { object.put("score", score); }
-		catch (JSONException e) { Utils.d("Error:Publishing:Score"); }
+		catch (JSONException e) { Utils.d("GodotFacebook", "Error:Publishing:Score"); }
 
 		GraphRequest graphRequest = GraphRequest.newPostRequest(token,
 		"me/scores", object, new GraphRequest.Callback() {
 			@Override
 			public void onCompleted(GraphResponse response) {
-				Utils.d(response.toString());
+				Utils.d("GodotFacebook", response.toString());
 			}
 		});
 
 		graphRequest.executeAsync();
-		Utils.d("F Score submitting: " + score);
+		Utils.d("GodotFacebook", "F Score submitting: " + score);
 	}
 
 	public void loadRequests() {
@@ -384,8 +384,8 @@ public class FacebookSDK {
 					JSONObject graphObject = response.getJSONObject();
 					JSONArray data = graphObject.optJSONArray("data");
 
-					Utils.callScriptFunc("pendingRequest", data.toString());
-				} else { Utils.d("Response Error: " + error.toString()); }
+					Utils.callScriptFunc("Facebook", "pendingRequest", data.toString());
+				} else { Utils.d("GodotFacebook", "Response Error: " + error.toString()); }
 			}
 		});
 
@@ -424,7 +424,7 @@ public class FacebookSDK {
 
 	public static void deleteRequest (String requestId) {
 		// delete Requets here GraphAPI.
-		Utils.d("Deleting:Request:" + requestId);
+		Utils.d("GodotFacebook", "Deleting:Request:" + requestId);
 
 		AccessToken token = AccessToken.getCurrentAccessToken();
 		GraphRequest graphRequest = GraphRequest.newDeleteObjectRequest(
@@ -432,7 +432,7 @@ public class FacebookSDK {
 			@Override
 			public void onCompleted(GraphResponse response) {
 				FacebookRequestError error = response.getError();
-				if (error == null) { Utils.d("OnDelete:Req:" + response.toString()); }
+				if (error == null) { Utils.d("GodotFacebook", "OnDelete:Req:" + response.toString()); }
 			}
 		});
 
@@ -449,8 +449,8 @@ public class FacebookSDK {
 			public void onCompleted(GraphResponse response) {
 				FacebookRequestError error = response.getError();
 
-				if (error == null) { Utils.d("Response: " + response.toString()); }
-				else { Utils.d("Error: " + response.toString()); }
+				if (error == null) { Utils.d("GodotFacebook", "Response: " + response.toString()); }
+				else { Utils.d("GodotFacebook", "Error: " + response.toString()); }
 			}
 		});
 
@@ -468,7 +468,7 @@ public class FacebookSDK {
 			public void onCompleted(GraphResponse response) {
 				FacebookRequestError error = response.getError();
 
-				Utils.d("Resonce:Top:Scores: " + response.toString());
+				Utils.d("GodotFacebook", "Resonce:Top:Scores: " + response.toString());
 
 				if (error == null) {
 					JSONArray ret = new JSONArray();
@@ -477,7 +477,7 @@ public class FacebookSDK {
 						JSONObject jobj = data.optJSONObject(i);
 						JSONObject user = jobj.optJSONObject("user");
 
-						Utils.d("USER:Data:" + user.toString());
+						Utils.d("GodotFacebook", "USER:Data:" + user.toString());
 
 						int score = jobj.optInt("score");
 						String userName = user.optString("name");
@@ -487,14 +487,14 @@ public class FacebookSDK {
 							retObj.put("score", score);
 							retObj.put("name", userName);
 						} catch(JSONException e) {
-							Utils.d("Loading:Scores:exception");
+							Utils.d("GodotFacebook", "Loading:Scores:exception");
 						}
 
-						Utils.d("Adding:User:" + userName);
+						Utils.d("GodotFacebook", "Adding:User:" + userName);
 						ret.put(retObj);
 					}
 
-					Utils.callScriptFunc("topScoresList", ret.toString());
+					Utils.callScriptFunc("Facebook", "topScoresList", ret.toString());
 				}
 			}
 		});
@@ -512,12 +512,12 @@ public class FacebookSDK {
 
 	public void onStart() {
 		if (accessToken == null || accessToken.isExpired()) {
-			Utils.d("AccessToken:Expired:OR:NotLoggedIN");
+			Utils.d("GodotFacebook", "AccessToken:Expired:OR:NotLoggedIN");
 			loggedIn = false;
 
-			Utils.callScriptFunc("login", "false");
+			Utils.callScriptFunc("Facebook", "login", "false");
 		} else {
-			Utils.d("AccessToken:Valid");
+			Utils.d("GodotFacebook", "AccessToken:Valid");
 			successLogin();
 		}
 	}
